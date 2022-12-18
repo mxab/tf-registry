@@ -48,4 +48,5 @@ type ModuleService interface {
 	Search(params SearchParams) (ModuleResult, error)
 	List(params ListParams) (ModuleResult, error)
 	Versions(modul ModuleDescriptor) ([]string, error)
+	DownloadUrl(ModuleDescriptor, string) (string, error)
 }

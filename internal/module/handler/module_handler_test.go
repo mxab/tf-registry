@@ -205,3 +205,24 @@ func TestListModuleVersions(t *testing.T) {
 		ja.Assertf(rec.Body.String(), string(json))
 	}
 }
+func TestDownloadModule(t *testing.T) {
+	// Setup
+	e := echo.New()
+	e.Validator = tfv.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/v1/modules/:namespace/:name/:system/:version/download")
+	c.SetParamNames("namespace", "name", "system", "version")
+	c.SetParamValues("Azure", "network", "azurerm", "1.1.1")
+
+	controller := &Controller{
+		ModuleService: tft.NewMockModuleService(),
+	}
+
+	// Assertions
+	if assert.NoError(t, controller.DownloadModule(c)) {
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+		assert.NotEmpty(t, rec.Header().Get("X-Terraform-Get"))
+	}
+}

@@ -28,6 +28,12 @@ type (
 		Name      string `param:"name"`
 		System    string `param:"system"`
 	}
+	DownloadModuleRequest struct {
+		Namespace string `param:"namespace"`
+		Name      string `param:"name"`
+		System    string `param:"system"`
+		Version   string `param:"version"`
+	}
 	Module struct {
 		Id          string `json:"id"`
 		Owner       string `json:"owner"`
@@ -185,4 +191,28 @@ func (ctrl *Controller) ListModuleVersions(c echo.Context) (err error) {
 			},
 		},
 	})
+}
+
+// DownloadModule
+func (ctrl *Controller) DownloadModule(c echo.Context) (err error) {
+	request := new(DownloadModuleRequest)
+
+	if err = c.Bind(request); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err = c.Validate(request); err != nil {
+		return err
+	}
+
+	url, err := ctrl.ModuleService.DownloadUrl(service.ModuleDescriptor{
+		Namespace: request.Namespace,
+		Name:      request.Name,
+		System:    request.System,
+	}, request.Version)
+	if err != nil {
+		c.Logger().Warn(err)
+		return echo.ErrInternalServerError
+	}
+	c.Response().Header().Set("X-Terraform-Get", url)
+	return c.NoContent(http.StatusNoContent)
 }

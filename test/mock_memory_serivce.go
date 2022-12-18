@@ -1,6 +1,8 @@
 package test
 
 import (
+	"errors"
+
 	"github.com/mxab/tf-registry/internal/module/service"
 	"github.com/samber/lo"
 )
@@ -139,4 +141,26 @@ func (m *MockModuleService) Versions(params service.ModuleDescriptor) ([]string,
 		return module.Version
 	}), nil
 
+}
+
+// 	DownloadUrl(ModuleDescriptor, string) (string, error)
+
+func (m *MockModuleService) DownloadUrl(params service.ModuleDescriptor, version string) (string, error) {
+
+	modules := lo.Filter(m.modules, func(module service.Module, index int) bool {
+		return module.Namespace == params.Namespace &&
+			module.Name == params.Name &&
+			module.Provider == params.System &&
+			module.Version == version
+	})
+
+	if len(modules) == 0 {
+		return "", errors.New("module not found")
+	}
+	// return error if modules[0].Source is empty
+	if modules[0].Source == "" {
+		return "", errors.New("module source is empty")
+	}
+
+	return modules[0].Source, nil
 }
