@@ -8,6 +8,7 @@ import (
 	"github.com/samber/lo"
 )
 
+// //https://developer.hashicorp.com/terraform/internals/module-registry-protocol
 type (
 	ListRequest struct {
 		Limit     int    `query:"limit" validate:"gte=0,lte=100"`
@@ -21,6 +22,11 @@ type (
 		Query     string `query:"q" validate:"required"`
 		Namespace string `param:"namespace"`
 		Provider  string `query:"provider"`
+	}
+	ListModuleVersionsRequest struct {
+		Namespace string `param:"namespace"`
+		Name      string `param:"name"`
+		System    string `param:"system"`
 	}
 	Module struct {
 		Id          string `json:"id"`
@@ -42,6 +48,16 @@ type (
 	ModuleResult struct {
 		Meta    ModuleResultMeta `json:"meta"`
 		Modules []Module         `json:"modules"`
+	}
+
+	ModuleVersionsResponse struct {
+		Modules []ModuleVersions `json:"modules"`
+	}
+	ModuleVersions struct {
+		Versions []ModuleVersion `json:"versions"`
+	}
+	ModuleVersion struct {
+		Version string `json:"version"`
 	}
 	Controller struct {
 		ModuleService service.ModuleService
@@ -138,4 +154,35 @@ func convertModule(m service.Module, _ int) Module {
 		Source:      m.Source,
 		PublishedAt: m.PublishedAt,
 	}
+}
+func (ctrl *Controller) ListModuleVersions(c echo.Context) (err error) {
+
+	request := new(ListModuleVersionsRequest)
+
+	if err = c.Bind(request); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err = c.Validate(request); err != nil {
+		return err
+	}
+	result, err := ctrl.ModuleService.Versions(service.ModuleDescriptor{
+		Namespace: request.Namespace,
+		Name:      request.Name,
+		System:    request.System,
+	})
+	if err != nil {
+		c.Logger().Warn(err)
+		return echo.ErrInternalServerError
+	}
+	return c.JSON(http.StatusOK, ModuleVersionsResponse{
+		Modules: []ModuleVersions{
+			{
+				Versions: lo.Map(result, func(v string, _ int) ModuleVersion {
+					return ModuleVersion{
+						Version: v,
+					}
+				}),
+			},
+		},
+	})
 }

@@ -37,8 +37,15 @@ type (
 		Provider  string
 		Namespace string
 	}
+
+	ModuleDescriptor struct {
+		Namespace string
+		Name      string
+		System    string
+	}
 )
 type ModuleService interface {
 	Search(params SearchParams) (ModuleResult, error)
 	List(params ListParams) (ModuleResult, error)
+	Versions(modul ModuleDescriptor) ([]string, error)
 }

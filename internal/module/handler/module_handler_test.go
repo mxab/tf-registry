@@ -34,7 +34,7 @@ func TestListModule(t *testing.T) {
 	// Assertions
 	if assert.NoError(t, controller.ListModules(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-		ja.Assertf(rec.Body.String(), buildExpectedJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{}, map[string]any{}, map[string]any{}, map[string]any{}))
+		ja.Assertf(rec.Body.String(), buildExpectedModulesJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{}, map[string]any{}, map[string]any{}, map[string]any{}))
 	}
 }
 func TestSearchModules(t *testing.T) {
@@ -59,7 +59,7 @@ func TestSearchModules(t *testing.T) {
 				"q": "network",
 			},
 			expectedCode: http.StatusOK,
-			expectedJSON: buildExpectedJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{"name": "network"}, map[string]any{"name": "network"}),
+			expectedJSON: buildExpectedModulesJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{"name": "network"}, map[string]any{"name": "network"}),
 		},
 		{
 			name: "with limit",
@@ -68,7 +68,7 @@ func TestSearchModules(t *testing.T) {
 				"limit": "1",
 			},
 			expectedCode: http.StatusOK,
-			expectedJSON: buildExpectedJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{"name": "network"}),
+			expectedJSON: buildExpectedModulesJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{"name": "network"}),
 		},
 		{
 			name: "with limit, offset",
@@ -79,7 +79,7 @@ func TestSearchModules(t *testing.T) {
 			},
 
 			expectedCode: http.StatusOK,
-			expectedJSON: buildExpectedJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{"name": "network"}),
+			expectedJSON: buildExpectedModulesJson(t, map[string]any{"next_offset": "<<PRESENCE>>"}, map[string]any{"name": "network"}),
 		},
 	}
 
@@ -121,7 +121,7 @@ func TestSearchModules(t *testing.T) {
 
 }
 
-func buildExpectedJson(t *testing.T, meta map[string]any, modules ...map[string]any) string {
+func buildExpectedModulesJson(t *testing.T, meta map[string]any, modules ...map[string]any) string {
 	var defaultMapForModuleFields = map[string]string{
 		"id":           "<<PRESENCE>>",
 		"owner":        "",
@@ -166,4 +166,42 @@ func buildExpectedJson(t *testing.T, meta map[string]any, modules ...map[string]
 	}
 	return string(expectedJson)
 
+}
+
+// /:namespace/:name/:provider/versions
+// :namespace/:name/:system/versions
+func TestListModuleVersions(t *testing.T) {
+	// Setup
+	ja := jsonassert.New(t)
+
+	e := echo.New()
+	e.Validator = tfv.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/v1/modules/:namespace/:name/:system/versions")
+	c.SetParamNames("namespace", "name", "system")
+	c.SetParamValues("Azure", "network", "azurerm")
+
+	controller := &Controller{
+		ModuleService: tft.NewMockModuleService(),
+	}
+
+	// Assertions
+	if assert.NoError(t, controller.ListModuleVersions(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		json, err := json.Marshal(map[string]any{
+			"modules": []any{
+				map[string]any{
+					"versions": []map[string]string{
+						{"version": "1.1.1"},
+					},
+				},
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ja.Assertf(rec.Body.String(), string(json))
+	}
 }

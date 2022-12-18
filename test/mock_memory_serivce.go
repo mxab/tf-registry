@@ -125,3 +125,18 @@ func (m *MockModuleService) Search(params service.SearchParams) (service.ModuleR
 		Modules: filteredModules,
 	}, nil
 }
+
+// Versions
+func (m *MockModuleService) Versions(params service.ModuleDescriptor) ([]string, error) {
+
+	modules := lo.Filter(m.modules, func(module service.Module, index int) bool {
+		return module.Namespace == params.Namespace &&
+			module.Name == params.Name &&
+			module.Provider == params.System
+	})
+
+	return lo.Map(modules, func(module service.Module, _ int) string {
+		return module.Version
+	}), nil
+
+}
