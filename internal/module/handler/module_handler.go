@@ -216,3 +216,11 @@ func (ctrl *Controller) DownloadModule(c echo.Context) (err error) {
 	c.Response().Header().Set("X-Terraform-Get", url)
 	return c.NoContent(http.StatusNoContent)
 }
+
+func RegisterModuleControllerGroup(g *echo.Group, moduleService service.ModuleService) {
+	ctrl := &Controller{ModuleService: moduleService}
+	g.GET("", ctrl.ListModules)
+	g.GET("/search", ctrl.SearchModules)
+	g.GET("/:namespace/:name/:system/:version", ctrl.ListModuleVersions)
+	g.GET("/:namespace/:name/:system/:version/download", ctrl.DownloadModule)
+}
