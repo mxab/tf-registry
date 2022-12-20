@@ -3,6 +3,7 @@ package s3moduleservice
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -58,6 +59,17 @@ func (s *S3ModuleService) GetModuleDownloadUrl(modul service.ModuleDescriptor, v
 	}
 
 	return req.URL, nil
+}
+
+// implment upload
+func (s *S3ModuleService) UploadModule(modul service.ModuleDescriptor, version string, content io.Reader) error {
+	ctx := context.Background()
+	_, err := s.s3.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s.bucketName),
+		Key:    aws.String(buildS3Key(modul, version)),
+		Body:   content,
+	})
+	return err
 }
 
 func NewS3ModuleService(s3 *s3.Client, bucketName string, presignClient *s3.PresignClient) *S3ModuleService {

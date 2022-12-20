@@ -2,6 +2,7 @@ package test
 
 import (
 	"errors"
+	"io"
 
 	"github.com/mxab/tf-registry/internal/module/service"
 	"github.com/samber/lo"
@@ -163,4 +164,22 @@ func (m *MockModuleService) DownloadUrl(params service.ModuleDescriptor, version
 	}
 
 	return modules[0].Source, nil
+}
+
+// UploadModule
+func (m *MockModuleService) UploadModule(params service.ModuleDescriptor, version string, data io.Reader) error {
+
+	// check if module exists
+	modules := lo.Filter(m.modules, func(module service.Module, index int) bool {
+		return module.Namespace == params.Namespace &&
+			module.Name == params.Name &&
+			module.Provider == params.System &&
+			module.Version == version
+	})
+
+	if len(modules) == 0 {
+		return errors.New("module not found")
+	}
+
+	return nil
 }

@@ -165,3 +165,29 @@ func uploadArtifact(t *testing.T, s3Client *s3.Client, ctx context.Context, buck
 	}
 
 }
+
+func TestUpload(t *testing.T) {
+	//skip if short
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
+
+	cleanup, s3Client, bucketName, _ := startMinio(t)
+	defer cleanup()
+
+	ctx := context.Background()
+
+	s3Service := NewS3ModuleService(s3Client, bucketName, nil)
+	err := s3Service.UploadModule(service.ModuleDescriptor{
+		Namespace: "hashicorp",
+		Name:      "aws",
+		System:    "aws",
+	}, "3.0.0", bytes.NewReader([]byte("module data")))
+	assert.NoError(t, err)
+
+	_, err = s3Client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String("modules/namespaces/hashicorp/aws/aws/3.0.0/module.tar.gz"),
+	})
+	assert.NoError(t, err)
+}

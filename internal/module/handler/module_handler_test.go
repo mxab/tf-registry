@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -224,5 +225,27 @@ func TestDownloadModule(t *testing.T) {
 	if assert.NoError(t, controller.DownloadModule(c)) {
 		assert.Equal(t, http.StatusNoContent, rec.Code)
 		assert.NotEmpty(t, rec.Header().Get("X-Terraform-Get"))
+	}
+}
+
+func TestUploadModule(t *testing.T) {
+	// Setup
+	e := echo.New()
+	e.Validator = tfv.New()
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte("test")))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	req.Header.Set("Content-Type", "application/octet-stream")
+	c.SetPath("/v1/modules/:namespace/:name/:system/:version/upload")
+	c.SetParamNames("namespace", "name", "system", "version")
+	c.SetParamValues("Azure", "network", "azurerm", "1.1.1")
+
+	controller := &Controller{
+		ModuleService: tft.NewMockModuleService(),
+	}
+
+	// Assertions
+	if assert.NoError(t, controller.UploadModule(c)) {
+		assert.Equal(t, http.StatusNoContent, rec.Code)
 	}
 }

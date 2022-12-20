@@ -1,5 +1,9 @@
 package service
 
+import (
+	"io"
+)
+
 // go interface called ModuleService, has a search method that takes a query string, limit int, offset int, provider string, namespace string, verified bool and returns a ModuleResult, and a Get method that takes an id string and returns a Module
 
 type (
@@ -49,4 +53,5 @@ type ModuleService interface {
 	List(params ListParams) (ModuleResult, error)
 	Versions(modul ModuleDescriptor) ([]string, error)
 	DownloadUrl(ModuleDescriptor, string) (string, error)
+	UploadModule(ModuleDescriptor, string, io.Reader) error
 }

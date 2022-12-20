@@ -34,6 +34,12 @@ type (
 		System    string `param:"system"`
 		Version   string `param:"version"`
 	}
+	UploadModuleRequest struct {
+		Namespace string `param:"namespace"`
+		Name      string `param:"name"`
+		System    string `param:"system"`
+		Version   string `param:"version"`
+	}
 	Module struct {
 		Id          string `json:"id"`
 		Owner       string `json:"owner"`
@@ -217,10 +223,38 @@ func (ctrl *Controller) DownloadModule(c echo.Context) (err error) {
 	return c.NoContent(http.StatusNoContent)
 }
 
+func (ctrl *Controller) UploadModule(c echo.Context) (err error) {
+	request := new(UploadModuleRequest)
+
+	request.Version = c.Param("version")
+	request.Namespace = c.Param("namespace")
+	request.Name = c.Param("name")
+	request.System = c.Param("system")
+
+	if err = c.Validate(request); err != nil {
+		return err
+	}
+
+	req := c.Request()
+	if req.Body == nil {
+		c.Logger().Warn(err)
+		return echo.ErrInternalServerError
+	}
+	if err = ctrl.ModuleService.UploadModule(service.ModuleDescriptor{
+		Namespace: request.Namespace,
+		Name:      request.Name,
+		System:    request.System,
+	}, request.Version, req.Body); err != nil {
+		c.Logger().Warn(err)
+		return echo.ErrInternalServerError
+	}
+	return c.NoContent(http.StatusNoContent)
+}
 func RegisterModuleControllerGroup(g *echo.Group, moduleService service.ModuleService) {
 	ctrl := &Controller{ModuleService: moduleService}
 	g.GET("", ctrl.ListModules)
 	g.GET("/search", ctrl.SearchModules)
 	g.GET("/:namespace/:name/:system/:version", ctrl.ListModuleVersions)
 	g.GET("/:namespace/:name/:system/:version/download", ctrl.DownloadModule)
+	g.POST("/:namespace/:name/:system/:version/upload", ctrl.UploadModule)
 }
