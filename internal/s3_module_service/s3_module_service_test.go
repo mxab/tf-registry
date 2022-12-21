@@ -156,7 +156,7 @@ func uploadArtifact(t *testing.T, s3Client *s3.Client, ctx context.Context, buck
 
 	_, err := s3Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(fmt.Sprintf("modules/namespaces/%s/%s/%s/%s/module.tar.gz", namespace, name, system, version)),
+		Key:    aws.String(fmt.Sprintf("modules/namespaces/%s/%s/%s/%s/module.zip", namespace, name, system, version)),
 		Body:   bytes.NewReader([]byte("module data")),
 	})
 
@@ -187,7 +187,7 @@ func TestUpload(t *testing.T) {
 
 	_, err = s3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String("modules/namespaces/hashicorp/aws/aws/3.0.0/module.tar.gz"),
+		Key:    aws.String("modules/namespaces/hashicorp/aws/aws/3.0.0/module.zip"),
 	})
 	assert.NoError(t, err)
 }

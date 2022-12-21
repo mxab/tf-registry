@@ -19,7 +19,7 @@ type S3ModuleService struct {
 
 func buildS3Key(module service.ModuleDescriptor, version string) string {
 
-	return fmt.Sprintf("modules/namespaces/%s/%s/%s/%s/module.tar.gz", module.Namespace, module.Name, module.System, version)
+	return fmt.Sprintf("modules/namespaces/%s/%s/%s/%s/module.zip", module.Namespace, module.Name, module.System, version)
 }
 
 // implement the interface
@@ -42,7 +42,7 @@ func (s *S3ModuleService) Versions(modul service.ModuleDescriptor) ([]string, er
 
 	versions := make([]string, 0, len(resp.Contents))
 	for _, obj := range resp.Contents {
-		key := strings.TrimSuffix(strings.TrimPrefix(*obj.Key, baseKey), "/module.tar.gz")
+		key := strings.TrimSuffix(strings.TrimPrefix(*obj.Key, baseKey), "/module.zip")
 		versions = append(versions, key)
 	}
 	return versions, nil
