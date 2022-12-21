@@ -116,7 +116,7 @@ func TestDownloadUrl(t *testing.T) {
 	assert.NoError(t, err)
 	//check for signed s3 url params
 	assert.Equal(t, "AWS4-HMAC-SHA256", url.Query().Get("X-Amz-Algorithm"))
-	assert.Equal(t, "minio/20221219/us-east-1/s3/aws4_request", url.Query().Get("X-Amz-Credential"))
+	assert.NotEqual(t, "", url.Query().Get("X-Amz-Credential"))
 	assert.Equal(t, "900", url.Query().Get("X-Amz-Expires"))
 	assert.NotEqual(t, "", url.Query().Get("X-Amz-Signature"))
 	assert.Equal(t, "host", url.Query().Get("X-Amz-SignedHeaders"))
