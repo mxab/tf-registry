@@ -3,7 +3,7 @@ package discovery
 import (
 	"net/http"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type (
@@ -15,8 +15,10 @@ type (
 	}
 )
 
-func NewController(discovery DiscoveryResponse) *Controller {
-	return &Controller{discovery: discovery}
+func NewController(e *echo.Echo, discovery DiscoveryResponse) *Controller {
+	controller := &Controller{discovery: discovery}
+	e.GET("/.well-known/terraform.json", controller.Discovery)
+	return controller
 }
 
 // Discovery

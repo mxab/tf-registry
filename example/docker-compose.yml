@@ -3,9 +3,10 @@ services:
     image: minio/minio
     restart: always
     environment:
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio123
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
     command: [ "server", "--console-address", ":9001", "/data" ]
+    
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -13,3 +14,5 @@ services:
     build:
       context: ../
       dockerfile: Dockerfile
+    ports:
+      - "1323:1323"

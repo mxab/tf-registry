@@ -27,11 +27,25 @@ func UploadDir(dir, host, namespace, name, system, version string) error {
 
 // upload to registry host with the /modules/namespaces/name/provider/version/upload endpoint
 func Upload(file *os.File, host string, namespace, name, system, version string) error {
-	uploadUrl := fmt.Sprintf("%s/modules/namespaces/%s/%s/%s/%s/upload", host, namespace, name, system, version)
+	uploadUrl := fmt.Sprintf("%s/v1/modules/%s/%s/%s/%s/upload", host, namespace, name, system, version)
 
-	_, err := http.Post(uploadUrl, "application/zip", file)
+	//open the file
+	file, err := os.Open(file.Name())
 	if err != nil {
 		return err
+	}
+	res, err := http.Post(uploadUrl, "application/zip", file)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(res.Body)
+
+		if err != nil {
+			fmt.Printf("Failed to parse response body, %v", err)
+		}
+		fmt.Printf("failed to upload module, %s\n%s\n", res.Status, string(body))
+		return fmt.Errorf("failed to upload module, %s", res.Status)
 	}
 
 	return nil
@@ -41,6 +55,7 @@ func Upload(file *os.File, host string, namespace, name, system, version string)
 // takes the the dir path, creates a tar zip and uploads to a server with the /.../upload endpoint
 func Zip(dir string) (*os.File, func() error, error) {
 	file, err := os.CreateTemp("", "*.tf-registry-module.zip")
+
 	if err != nil {
 		return nil, nil, err
 	}

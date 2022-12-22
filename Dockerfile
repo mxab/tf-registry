@@ -5,9 +5,9 @@ COPY go.mod go.sum ./
 RUN ls -al
 RUN go mod download
 COPY . .
-RUN go build -o /bin/tf-registry
+RUN go build cmd/tfr/tfr.go
 
 FROM alpine:3.14
-COPY --from=builder /bin/tf-registry /bin/tf-registry
-ENTRYPOINT ["/bin/tf-registry"]
+COPY --from=builder /src/tfr /bin/tfr
+ENTRYPOINT ["/bin/tfr"]
 CMD [ "server" ]

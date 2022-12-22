@@ -72,7 +72,19 @@ func (s *S3ModuleService) UploadModule(modul service.ModuleDescriptor, version s
 	return err
 }
 
-func NewS3ModuleService(s3 *s3.Client, bucketName string, presignClient *s3.PresignClient) *S3ModuleService {
+func NewS3ModuleService(s3Client *s3.Client, bucketName string, presignClient *s3.PresignClient) *S3ModuleService {
 
-	return &S3ModuleService{s3: s3, bucketName: bucketName, presignClient: presignClient}
+	//ensure bucket exists
+	ctx := context.Background()
+	_, err := s3Client.HeadBucket(ctx, &s3.HeadBucketInput{
+		Bucket: aws.String(bucketName),
+	})
+
+	// fail if not permission to access bucket
+	if err != nil {
+		fmt.Printf("Cannot head bucket, error: %v", err)
+
+	}
+
+	return &S3ModuleService{s3: s3Client, bucketName: bucketName, presignClient: presignClient}
 }
